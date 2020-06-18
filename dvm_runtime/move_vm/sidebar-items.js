@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["AddressStore",""],["Dvm","Dfinance virtual machine."],["ExecutionMeta",""],["ExecutionResult",""],["Script",""],["U64Store",""],["VectorU8Store",""]],"type":[["VmResult",""]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Demon","Demon task."],["FixedDelayDemon","Signal thread task with fixed delay."]]});
