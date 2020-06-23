@@ -78,8 +78,9 @@ jobs:
         - ubuntu-latest
         dnode:
         - master
-        - v0.4.0
-        - 2eb5775c9f2d7cb1d28174efb0cff4adb3e7d150
+        - feature-dfi-436_dvm_master
+        # - v0.4.0
+        # - 2eb5775c9f2d7cb1d28174efb0cff4adb3e7d150
 
 
     env:
@@ -123,10 +124,6 @@ jobs:
       with:
         name: dvm-${{ runner.os }}
         path: ${{ steps.VARS.outputs.DVM_BIN }}/
-
-    - run: ls ${{ steps.VARS.outputs.DVM_BIN }}/*
-
-    - run: mv -f ${{ steps.VARS.outputs.DVM_BIN }}/dvm-{{ runner.os }} ${{ steps.VARS.outputs.DVM_BIN }}/dvm
 
     - name: Add DVM into PATH
       run: |
