@@ -14,8 +14,8 @@ on:
     # inegrt/master
 
 jobs:
-  with-node:
-    name: Tests DVM with Node
+  dvm:
+    name: Build DVM
     runs-on: ${{ matrix.os }}
 
     defaults:
@@ -23,7 +23,7 @@ jobs:
         shell: bash
 
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         os:
         - macos-latest
@@ -37,37 +37,7 @@ jobs:
       CARGO_NET_RETRY: 10
 
     steps:
-    # usage:
-    # ${{ steps.VARS.outputs.NODE_REPO }}
-    - name: Setup VARs
-      id: VARS
-      run: |
-        echo ::set-output name=DVM_BIN::${{ github.workspace }}/target/debug
-        echo ::set-output name=NODE_REPO::dfinance/dnode
-        echo ::set-output name=NODE_REPO_PATH::${{ github.workspace }}/go/src/github.com/dfinance/dnode
-        echo ::set-output name=GOPATH::${{ github.workspace }}/go
 
-    - name: Extract the version tag
-      id: version_tag
-      run: echo ::set-output name=value::$(echo $GITHUB_REF | cut -d / -f 3)
-
-    # usage:
-    # ${{ steps.dnode_ref.outputs.value }}
-    - name: Extract the dnode repo ref from tag
-      id: dnode_ref
-      run: |
-        TAG_KIND=$(echo $GITHUB_REF | cut -d / -f 2)
-        TAG_FIRST=$(echo $GITHUB_REF | cut -d / -f 3)
-        TAG_LAST=${GITHUB_REF##*/}
-        [[ "$TAG_FIRST" == "inegrt" ]] && echo "::set-output name=value::$TAG_LAST"
-        [[ "$TAG_FIRST" == "inegrt" ]] || echo "::set-output name=value::$TAG_FIRST"
-        # fallback, default branch
-        [[ "$TAG_KIND" == "heads" ]] && echo "::set-output name=value::master"
-        true
-
-    #
-    # VM
-    #
     - name: Checkout DVM
       uses: actions/checkout@v2
 
@@ -85,6 +55,75 @@ jobs:
     - name: Build DVM
       run: cargo build --bin dvm
 
+    - uses: actions/upload-artifact@master
+      with:
+        name: dvm-${{ runner.os }}
+        path: ${{ github.workspace }}/target/debug/dvm
+
+
+  with-node:
+    needs: dvm
+    name: Tests DVM with Node
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+        - macos-latest
+        - ubuntu-latest
+        dnode:
+        - master
+        - v0.4.0
+        - 2eb5775c9f2d7cb1d28174efb0cff4adb3e7d150
+
+
+    env:
+      RUSTFLAGS: -D warnings
+      RUST_BACKTRACE: full
+      CARGO_INCREMENTAL: 1
+      RUSTUP_MAX_RETRIES: 10
+      CARGO_NET_RETRY: 10
+
+    steps:
+    # usage:
+    # ${{ steps.VARS.outputs.NODE_REPO }}
+    - name: Setup VARs
+      id: VARS
+      run: |
+        echo ::set-output name=DVM_BIN::${{ github.workspace }}/artifacts
+        echo ::set-output name=NODE_REPO::dfinance/dnode
+        echo ::set-output name=NODE_REPO_PATH::${{ github.workspace }}/go/src/github.com/dfinance/dnode
+        echo ::set-output name=GOPATH::${{ github.workspace }}/go
+
+    # usage:
+    # ${{ steps.dnode_ref.outputs.value }}
+    # - name: Extract the dnode repo ref from tag
+    #   id: dnode_ref
+    #   run: |
+    #     TAG_KIND=$(echo $GITHUB_REF | cut -d / -f 2)
+    #     TAG_FIRST=$(echo $GITHUB_REF | cut -d / -f 3)
+    #     TAG_LAST=${GITHUB_REF##*/}
+    #     [[ "$TAG_FIRST" == "inegrt" ]] && echo "::set-output name=value::$TAG_LAST"
+    #     [[ "$TAG_FIRST" == "inegrt" ]] || echo "::set-output name=value::$TAG_FIRST"
+    #     # fallback, default branch
+    #     [[ "$TAG_KIND" == "heads" ]] && echo "::set-output name=value::master"
+    #     true
+
+    #
+    # VM
+    #
+    - name: Get DVM build
+      uses: actions/download-artifact@v1
+      with:
+        name: dvm-${{ runner.os }}
+        path: ${{ steps.VARS.outputs.DVM_BIN }}/
+    - run: mv ${{ steps.VARS.outputs.DVM_BIN }}/dvm-{{ runner.os }} ${{ steps.VARS.outputs.DVM_BIN }}/dvm
+
     - name: Add DVM into PATH
       run: |
         echo "::add-path::${{ steps.VARS.outputs.DVM_BIN }}"
@@ -92,12 +131,13 @@ jobs:
     #
     # Node
     #
-    - name: Checkout DNode ${{ steps.dnode_ref.outputs.value }}
+    - name: Checkout DNode ${{ runner.dnode }}
       uses: actions/checkout@v2
       with:
         repository: ${{ steps.VARS.outputs.NODE_REPO }}
         submodules: true
-        ref: ${{ steps.dnode_ref.outputs.value }}
+        # ref: ${{ steps.dnode_ref.outputs.value }}
+        ref: ${{ runner.dnode }}
         path: ${{ steps.VARS.outputs.NODE_REPO_PATH }}
 
     - name: Set GOPATH
