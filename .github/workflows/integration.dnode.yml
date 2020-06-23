@@ -126,7 +126,7 @@ jobs:
         path: ${{ steps.VARS.outputs.DVM_BIN }}/
 
     - name: Fix DVM permissions
-      run: sudo chown +x ${{ steps.VARS.outputs.DVM_BIN }}/dvm
+      run: chmod +x ${{ steps.VARS.outputs.DVM_BIN }}/dvm
 
     - name: Add DVM into PATH
       run: |
