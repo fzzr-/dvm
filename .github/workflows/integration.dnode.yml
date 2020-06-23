@@ -63,7 +63,7 @@ jobs:
 
   with-node:
     needs: dvm
-    name: DNode ${{ runner.dnode }}
+    name: DNode integration
     runs-on: ${{ matrix.os }}
 
     defaults:
