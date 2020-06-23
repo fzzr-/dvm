@@ -63,7 +63,7 @@ jobs:
 
   with-node:
     needs: dvm
-    name: Tests DVM with Node
+    name: DNode ${{ runner.dnode }}
     runs-on: ${{ matrix.os }}
 
     defaults:
@@ -102,6 +102,7 @@ jobs:
 
     # usage:
     # ${{ steps.dnode_ref.outputs.value }}
+    # TODO: enable if need tag support
     # - name: Extract the dnode repo ref from tag
     #   id: dnode_ref
     #   run: |
@@ -122,7 +123,10 @@ jobs:
       with:
         name: dvm-${{ runner.os }}
         path: ${{ steps.VARS.outputs.DVM_BIN }}/
-    - run: mv ${{ steps.VARS.outputs.DVM_BIN }}/dvm-{{ runner.os }} ${{ steps.VARS.outputs.DVM_BIN }}/dvm
+
+    - run: ls ${{ steps.VARS.outputs.DVM_BIN }}/*
+
+    - run: mv -f ${{ steps.VARS.outputs.DVM_BIN }}/dvm-{{ runner.os }} ${{ steps.VARS.outputs.DVM_BIN }}/dvm
 
     - name: Add DVM into PATH
       run: |
